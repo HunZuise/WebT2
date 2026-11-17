@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Register your style</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f9; color: #333; }
+        h1 { color: #ff4757; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #ff4757; color: white; }
+        input, select, button { padding: 10px; margin: 5px 0; border-radius: 4px; border: 1px solid #ccc; width: 100%; max-width: 400px; display: block; }
+        button { background: #ff4757; color: white; border: none; cursor: pointer; width: auto; }
+        button:hover { background: #ff6b81; }
+        .del-btn { background: #ff4757; padding: 5px 10px; width: auto; }
+        .edit-btn { background: #ffa502; padding: 5px 10px; width: auto; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+<h1> Dance Battle — Регистрация участников</h1>
+
+<div class="card">
+    <h3 id="formTitle">Зарегистрировать участника</h3>
+    <input type="hidden" id="participantId">
+
+    <label>Никнейм:</label>
+    <input type="text" id="nickname" placeholder="Bбойщик / B-Boy Pro">
+
+    <label>Номер телефона:</label>
+    <input type="text" id="phone" placeholder="+7 (700) 000-00-00">
+
+    <label>Стиль танца:</label>
+    <select id="danceStyle">
+        <option value="Hip-Hop">Hip-Hop</option>
+        <option value="Popping">Popping</option>
+        <option value="DanceHall">DanceHall</option>
+        <option value="AllStyles">AllStyles</option>
+    </select>
+
+    <br>
+    <button id="saveBtn" onclick="saveParticipant()">Добавить</button>
+    <button id="cancelBtn" onclick="resetForm()" style="background: #747d8c; display: none;">Отмена</button>
+</div>
+
+<div class="card">
+    <h3>Список участников (сохраняется в JSON)</h3>
+    <button onclick="loadParticipants()">Обновить список</button>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Никнейм</th>
+            <th>Телефон</th>
+            <th>Стиль танца</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    const API_URL = '/api/dance'; // Убедись, что маппинг в твоем Controller совпадает (/api/dance или /api/participants)
+    window.onload = loadParticipants;
+
+    async function loadParticipants() {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        data.forEach(p => {
+            tbody.innerHTML += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.nickname}</td>
+                        <td>${p.phone}</td>
+                        <td>${p.danceStyle}</td>
+                        <td>
+                            <button class="edit-btn" onclick="startEdit(${p.id}, '${p.nickname}', '${p.phone}', '${p.danceStyle}')">Изменить</button>
+                            <button class="del-btn" onclick="deleteParticipant(${p.id})">Удалить</button>
+                        </td>
+                    </tr>
+                `;
+        });
+    }
+
+    async function saveParticipant() {
+        const id = document.getElementById('participantId').value;
+        const participant = {
+            nickname: document.getElementById('nickname').value,
+            phone: document.getElementById('phone').value,
+            danceStyle: document.getElementById('danceStyle').value
+        };
+
+        if (id) {
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(participant)
+            });
+        } else {
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(participant)
+            });
+        }
+
+        resetForm();
+        loadParticipants();
+    }
+
+    function startEdit(id, nickname, phone, danceStyle) {
+        document.getElementById('participantId').value = id;
+        document.getElementById('nickname').value = nickname;
+        document.getElementById('phone').value = phone;
+        document.getElementById('danceStyle').value = danceStyle;
+
+        document.getElementById('formTitle').innerText = 'Редактировать участника (ID: ' + id + ')';
+        document.getElementById('saveBtn').innerText = 'Сохранить';
+        document.getElementById('cancelBtn').style.display = 'inline-block';
+    }
+
+    function resetForm() {
+        document.getElementById('participantId').value = '';
+        document.getElementById('nickname').value = '';
+        document.getElementById('phone').value = '';
+
+        document.getElementById('formTitle').innerText = 'Зарегистрировать участника';
+        document.getElementById('saveBtn').innerText = 'Добавить';
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    async function deleteParticipant(id) {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        loadParticipants();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+### 1. Получить всех участников (и опционально искать по ?search=)
+GET http://localhost:8080/api/dance
+
+### 2. Получить участника по ID (например, ID = 1)
+GET http://localhost:8080/api/dance/1
+
+### 3. Добавить нового танцора (POST -> вернет 201 Created)
+POST http://localhost:8080/api/dance
+Content-Type: application/json
+
+{
+  "nickname": "B-Boy Kairat",
+  "phone": "+77011234567",
+  "danceStyle": "Breaking"
+}
+
+### 4. Обновить данные танцора с ID = 1 (PUT)
+PUT http://localhost:8080/api/dance/1
+Content-Type: application/json
+
+{
+  "nickname": "Kairat Pro",
+  "phone": "+77079998877",
+  "danceStyle": "Breaking, Hip-Hop"
+}
+
+### 5. Удалить танцора с ID = 1 (DELETE -> вернет 204 No Content)
+DELETE http://localhost:8080/api/dance/1
